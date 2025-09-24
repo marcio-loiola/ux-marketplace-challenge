@@ -1,40 +1,25 @@
-FROM python:3.11-slim
-
-# Definir variáveis de ambiente
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
-
-# Instalar dependências do sistema
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
-        curl \
-        libpq-dev \
-        gcc \
-        g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Definir diretório de trabalho
-WORKDIR /app
-
-# Copiar arquivos de dependências
-COPY requirements.txt .
-
-# Instalar dependências Python
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-# Copiar código da aplicação
+# 1. Development Stage
+FROM node:18-alpine AS development
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
 COPY . .
+CMD ["npm", "run", "start:dev"]
 
-# Criar usuário não-root para segurança
-RUN adduser --disabled-password --gecos '' appuser \
-    && chown -R appuser:appuser /app
-USER appuser
+# 2. Builder Stage
+FROM node:18-alpine AS builder
+WORKDIR /usr/src/app
+COPY package*.json ./
+# Use npm ci for reproducible builds
+RUN npm ci --omit=dev
+COPY . .
+RUN npm run build
 
-# Expor porta
-EXPOSE 8000
-
-# Comando padrão
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# 3. Production Stage
+FROM node:18-alpine AS production
+WORKDIR /usr/src/app
+# Copy built app and dependencies from builder stage
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+# Set the command to run the application
+CMD ["node", "dist/main"]
