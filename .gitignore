@@ -112,3 +112,12 @@ Thumbs.db
 
 # Local development
 .local
+
+# Project conventions and documentation
+conventions.md
+PROMPT.md
+
+# Inspirations folder (keep for development reference)
+inspirations/
+
+
