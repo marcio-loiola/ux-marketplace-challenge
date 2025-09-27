@@ -1,8 +1,8 @@
 # Relatório Final e Guia de Implementação – Fundação do Backend
 
 **Autor:** Jules, Arquiteto de Software Sênior
-**Data:** 2025-09-25
-**Branch de Destino:** `feat/marketplace-core`
+**Data:** 2025-09-26
+**Branch de Destino:** `feat/marketplace-core-1`
 
 ## 1. Introdução e Contexto
 
@@ -193,6 +193,7 @@ import { EmailModule } from './email/email.module';
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
       synchronize: false,
     }),
+    // O CacheModule está configurado para usar um mock em memória.
     CacheModule.register({ isGlobal: true }),
     ProductsModule,
     AuthModule,
